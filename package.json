@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.9.6",
+    "commander": "^5.1.0",
     "dotenv": "^8.2.0",
+    "get-stream": "^5.1.0",
+    "nfc-pcsc": "^0.8.0",
     "winston": "^3.2.1"
   },
   "devDependencies": {
