@@ -14,6 +14,7 @@ program
   .command('dump <destination>')
   .description('reads the contents of a tag to a file')
   .action((destination) => {
+    log.info('Waiting for tag to dump...');
     waitForTag(async (tag) => {
       try {
         const data = await tag.read();
@@ -21,8 +22,7 @@ program
 
         stream.write(data);
         stream.end();
-        log.info(`Wrote to ${destination}`);
-        tag.reader.end();
+        log.info(`Dumped tag to ${destination}`);
       } catch (error) {
         log.error(error.message);
         log.error(error.stack);
@@ -34,11 +34,13 @@ program
   .command('flash <source> <key>')
   .description('writes the contents of an encrypted binary to a tag')
   .action((sourcePath, keyPath) => {
+    log.info('Waiting for tag to flash...');
     waitForTag(async (tag) => {
       try {
-        const decryptedPath = `${sourcePath}.decrypted`;
-        const toolCommand = `amiitool.exe -d -k ${keyPath} -i ${sourcePath} -o ${decryptedPath}`;
+        const decryptedPath = `./decrypted.bin`;
+        const toolCommand = `amiitool.exe -d -k "${keyPath}" -i "${sourcePath}" -o "${decryptedPath}"`;
 
+        log.info(`Running ${toolCommand}`);
         exec(toolCommand);
 
         const sourceStream = createReadStream(`./${decryptedPath}`);
@@ -48,7 +50,6 @@ program
 
         await tag.write(sourceData);
         log.info(`Decrypted ${sourcePath} and wrote it to tag!`);
-        tag.reader.end();
       } catch (error) {
         log.error(error.message);
         log.error(error.stack);

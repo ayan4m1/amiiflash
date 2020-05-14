@@ -47,7 +47,9 @@ class NTAG215 {
     const { reader } = this;
 
     for (let page = 4; page < 130; page++) {
-      log.info(`Writing page ${page} / 135`);
+      const complete = (((page - 4) / 125.0) * 100).toFixed(2);
+
+      log.info(`Writing page ${page - 4} (${complete}%)`);
       await this.auth();
       await reader.write(page, data.slice(page * 4, (page + 1) * 4));
     }
@@ -58,7 +60,9 @@ class NTAG215 {
     const results = [];
 
     for (let page = 0; page < 135; page++) {
-      log.info(`Reading page ${page} / 135`);
+      const complete = ((page / 135.0) * 100).toFixed(2);
+
+      log.info(`Reading page ${page} (${complete}%)`);
       await this.auth();
       results.push(await reader.read(page, 4));
     }
@@ -74,6 +78,8 @@ export const waitForTag = (handler) => {
       reader: { name: readerName }
     } = reader;
 
+    log.info(`Connected to ${readerName}`);
+
     reader.on('card', async (card) => {
       try {
         if (card.type !== 'TAG_ISO_14443_3') {
@@ -84,7 +90,7 @@ export const waitForTag = (handler) => {
         log.info(`${readerName}: Card detected`, card.standard);
         const tag = new NTAG215(reader);
 
-        handler(tag);
+        await handler(tag);
       } catch (error) {
         log.error(error.message);
         log.error(error.stack);
@@ -99,5 +105,9 @@ export const waitForTag = (handler) => {
     reader.on('end', () => {
       log.info(`${readerName}: Device removed`);
     });
+  });
+
+  nfc.on('error', (err) => {
+    log.info('An error occurred', err);
   });
 };
